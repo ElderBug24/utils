@@ -1,4 +1,12 @@
+#ifndef RAW_INPUT_NB_H
+#define RAW_INPUT_NB_H
+
 #include <stdbool.h>
+
+
+void enable_raw_nb(void);
+void disable_raw_nb(void);
+int getchrnb(void);
 
 #ifdef _WIN32
 
@@ -7,7 +15,7 @@
 void enable_raw_nb(void) {}
 void disable_raw_nb(void) {}
 
-int getchnb(void) {
+int getchrnb(void) {
   if (!_kbhit()) return -1;
   return _getch();
 }
@@ -19,6 +27,7 @@ int getchnb(void) {
 #include <string.h>
 #include <unistd.h>
 #include <termios.h>
+
 
 static struct termios orig_termios;
 static int orig_flags;
@@ -49,7 +58,7 @@ void disable_raw_nb(void) {
   raw_enabled = false;
 }
 
-int getchnb(void) {
+int getchrnb(void) {
   unsigned char c;
 
   if (read(STDIN_FILENO, &c, 1) == 1) return c;
@@ -58,4 +67,6 @@ int getchnb(void) {
 }
 
 #endif
+
+#endif // RAW_INPUT_NB_H
 
