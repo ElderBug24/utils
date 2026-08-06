@@ -5,7 +5,7 @@
 #include <stdlib.h>
 
 
-void set_stdout_buf_size(unsigned long size) {
+int set_stdout_buf_size(unsigned long size) {
   if (setvbuf(stdout, malloc(size), _IOFBF, size) != 0)
     return 1;
   return 0;
