@@ -22,9 +22,6 @@ static double time_now(void) {
 }
 
 static void time_sleep_for(double seconds) {
-  if (seconds <= 0.0)
-    return;
-
   DWORD milliseconds = (DWORD)(seconds * 1000.0);
 
   if (milliseconds == 0)
@@ -48,9 +45,6 @@ static double time_now(void) {
 }
 
 static void time_sleep_for(double seconds) {
-  if (seconds <= 0.0)
-    return;
-
   struct timespec ts;
 
   ts.tv_sec = (time_t)seconds;
