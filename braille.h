@@ -12,6 +12,16 @@
 
 typedef unsigned char braille_t;
 
+typedef struct {
+  braille_t* items;
+  unsigned width, height;
+} braille_2dda_t;
+
+typedef struct {
+  wchar_t* items;
+  unsigned width, height;
+} wchar_braille_2dda_t;
+
 extern const braille_t BRAILLE_EMPTY;
 extern const braille_t BRAILLE_FULL;
 extern const braille_t BRAILLE_BIT_0;
@@ -56,6 +66,26 @@ BRAILLE_DEF wchar_t wchar_braille_toggle_bit(wchar_t wchar, unsigned char index)
 
 BRAILLE_DEF bool wchar_is_braille(wchar_t wchar);
 BRAILLE_DEF unsigned char braille_bit_index_2d(unsigned char x, unsigned char y);
+
+BRAILLE_DEF braille_2dda_t braille_2dda_new(unsigned width, unsigned height);
+BRAILLE_DEF void braille_2dda_free(braille_2dda_t arr);
+BRAILLE_DEF bool braille_2dda_get_bit(braille_2dda_t arr, unsigned x, unsigned y);
+BRAILLE_DEF void braille_2dda_set_bit(braille_2dda_t arr, unsigned x, unsigned y, bool value);
+BRAILLE_DEF void braille_2dda_clear_bit(braille_2dda_t arr, unsigned x, unsigned y);
+BRAILLE_DEF void braille_2dda_toggle_bit(braille_2dda_t arr, unsigned x, unsigned y);
+BRAILLE_DEF braille_t braille_2dda_get_braille(braille_2dda_t arr, unsigned x, unsigned y);
+BRAILLE_DEF braille_t* braille_2dda_get_braille_ptr(braille_2dda_t arr, unsigned x, unsigned y);
+BRAILLE_DEF void braille_2dda_set_braille(braille_2dda_t arr, unsigned x, unsigned y, braille_t value);
+
+BRAILLE_DEF wchar_braille_2dda_t wchar_braille_2dda_new(unsigned width, unsigned height);
+BRAILLE_DEF void wchar_braille_2dda_free(wchar_braille_2dda_t arr);
+BRAILLE_DEF bool wchar_braille_2dda_get_bit(wchar_braille_2dda_t arr, unsigned x, unsigned y);
+BRAILLE_DEF void wchar_braille_2dda_set_bit(wchar_braille_2dda_t arr, unsigned x, unsigned y, bool value);
+BRAILLE_DEF void wchar_braille_2dda_clear_bit(wchar_braille_2dda_t arr, unsigned x, unsigned y);
+BRAILLE_DEF void wchar_braille_2dda_toggle_bit(wchar_braille_2dda_t arr, unsigned x, unsigned y);
+BRAILLE_DEF wchar_t wchar_braille_2dda_get_wchar_braille(wchar_braille_2dda_t arr, unsigned x, unsigned y);
+BRAILLE_DEF wchar_t* wchar_braille_2dda_get_wchar_braille_ptr(wchar_braille_2dda_t arr, unsigned x, unsigned y);
+BRAILLE_DEF void wchar_braille_2dda_set_wchar_braille(wchar_braille_2dda_t arr, unsigned x, unsigned y, wchar_t value);
 
 #endif // BRAILLE_H
 
@@ -115,7 +145,27 @@ BRAILLE_DEF wchar_t wchar_braille_clear_bit(wchar_t wchar, unsigned char index) 
 BRAILLE_DEF wchar_t wchar_braille_toggle_bit(wchar_t wchar, unsigned char index) { return braille_to_wchar(braille_toggle_bit((braille_t) ((wint_t) wchar - (wint_t) WCHAR_BRAILLE_EMPTY), index)); }
 
 BRAILLE_DEF bool wchar_is_braille(wchar_t wchar) { return ((wint_t) wchar >= (wint_t) WCHAR_BRAILLE_EMPTY) & ((wint_t) wchar <= (wint_t) WCHAR_BRAILLE_FULL); }
-BRAILLE_DEF unsigned char braille_bit_index_2d(unsigned char x, unsigned char y) { return (unsigned char) (x + y * BRAILLE_WIDTH); }
+BRAILLE_DEF unsigned char braille_bit_index_2d(unsigned char x, unsigned char y) { return BRAILLE_BITS_MAP_NATURAL[(unsigned char) (x + y * BRAILLE_WIDTH)]; }
+
+BRAILLE_DEF braille_2dda_t braille_2dda_new(unsigned width, unsigned height) { return (braille_2dda_t) { .items = BRAILLE_MALLOC(width * height * sizeof(braille_t)), .width = width, .height = height }; }
+BRAILLE_DEF void braille_2dda_free(braille_2dda_t arr) { BRAILLE_FREE(arr.items); }
+BRAILLE_DEF bool braille_2dda_get_bit(braille_2dda_t arr, unsigned x, unsigned y) { return braille_get_bit(braille_2dda_get_braille(arr, (unsigned char) (x / BRAILLE_WIDTH), (unsigned char) (y / BRAILLE_HEIGHT)), braille_bit_index_2d((unsigned char) (x % BRAILLE_WIDTH), (unsigned char) (y % BRAILLE_HEIGHT))); }
+BRAILLE_DEF void braille_2dda_set_bit(braille_2dda_t arr, unsigned x, unsigned y, bool value) { *braille_2dda_get_braille_ptr(arr, (unsigned char) (x / BRAILLE_WIDTH), (unsigned char) (y / BRAILLE_HEIGHT)) = braille_set_bit(braille_2dda_get_braille(arr, (unsigned char) (x / BRAILLE_WIDTH), (unsigned char) (y / BRAILLE_HEIGHT)), braille_bit_index_2d((unsigned char) (x % BRAILLE_WIDTH), (unsigned char) (y % BRAILLE_HEIGHT)), value); }
+BRAILLE_DEF void braille_2dda_clear_bit(braille_2dda_t arr, unsigned x, unsigned y) { *braille_2dda_get_braille_ptr(arr, (unsigned char) (x / BRAILLE_WIDTH), (unsigned char) (y / BRAILLE_HEIGHT)) = braille_clear_bit(braille_2dda_get_braille(arr, (unsigned char) (x / BRAILLE_WIDTH), (unsigned char) (y / BRAILLE_HEIGHT)), braille_bit_index_2d((unsigned char) (x % BRAILLE_WIDTH), (unsigned char) (y % BRAILLE_HEIGHT))); }
+BRAILLE_DEF void braille_2dda_toggle_bit(braille_2dda_t arr, unsigned x, unsigned y) { *braille_2dda_get_braille_ptr(arr, (unsigned char) (x / BRAILLE_WIDTH), (unsigned char) (y / BRAILLE_HEIGHT)) = braille_toggle_bit(braille_2dda_get_braille(arr, (unsigned char) (x / BRAILLE_WIDTH), (unsigned char) (y / BRAILLE_HEIGHT)), braille_bit_index_2d((unsigned char) (x % BRAILLE_WIDTH), (unsigned char) (y % BRAILLE_HEIGHT))); }
+BRAILLE_DEF braille_t braille_2dda_get_braille(braille_2dda_t arr, unsigned x, unsigned y) { return arr.items[x + y * arr.width]; }
+BRAILLE_DEF braille_t* braille_2dda_get_braille_ptr(braille_2dda_t arr, unsigned x, unsigned y) { return &arr.items[x + y * arr.width]; }
+BRAILLE_DEF void braille_2dda_set_braille(braille_2dda_t arr, unsigned x, unsigned y, braille_t value) { arr.items[x + y * arr.width] = value; }
+
+BRAILLE_DEF wchar_braille_2dda_t wchar_braille_2dda_new(unsigned width, unsigned height) { return (wchar_braille_2dda_t) { .items = BRAILLE_MALLOC(width * height * sizeof(wchar_t)), .width = width, .height = height }; }
+BRAILLE_DEF void wchar_braille_2dda_free(wchar_braille_2dda_t arr) { BRAILLE_FREE(arr.items); }
+BRAILLE_DEF bool wchar_braille_2dda_get_bit(wchar_braille_2dda_t arr, unsigned x, unsigned y) { return wchar_braille_get_bit(wchar_braille_2dda_get_wchar_braille(arr, (unsigned char) ((unsigned char) (x / BRAILLE_WIDTH)), (unsigned char) (y / BRAILLE_HEIGHT)), braille_bit_index_2d((unsigned char) (x % BRAILLE_WIDTH), (unsigned char) (y % BRAILLE_HEIGHT))); }
+BRAILLE_DEF void wchar_braille_2dda_set_bit(wchar_braille_2dda_t arr, unsigned x, unsigned y, bool value) { *wchar_braille_2dda_get_wchar_braille_ptr(arr, (unsigned char) (x / BRAILLE_WIDTH), (unsigned char) (y / BRAILLE_HEIGHT)) = wchar_braille_set_bit(wchar_braille_2dda_get_wchar_braille(arr, (unsigned char) (x / BRAILLE_WIDTH), (unsigned char) (y / BRAILLE_HEIGHT)), braille_bit_index_2d((unsigned char) (x % BRAILLE_WIDTH), (unsigned char) (y % BRAILLE_HEIGHT)), value); }
+BRAILLE_DEF void wchar_braille_2dda_clear_bit(wchar_braille_2dda_t arr, unsigned x, unsigned y) { *wchar_braille_2dda_get_wchar_braille_ptr(arr, (unsigned char) (x / BRAILLE_WIDTH), y / BRAILLE_HEIGHT) = wchar_braille_clear_bit(wchar_braille_2dda_get_wchar_braille(arr, (unsigned char) (x / BRAILLE_WIDTH), (unsigned char) (y / BRAILLE_HEIGHT)), braille_bit_index_2d((unsigned char) (x % BRAILLE_WIDTH), (unsigned char) (y % BRAILLE_HEIGHT))); }
+BRAILLE_DEF void wchar_braille_2dda_toggle_bit(wchar_braille_2dda_t arr, unsigned x, unsigned y) { *wchar_braille_2dda_get_wchar_braille_ptr(arr, (unsigned char) (x / BRAILLE_WIDTH), (unsigned char) (y / BRAILLE_HEIGHT)) = wchar_braille_toggle_bit(wchar_braille_2dda_get_wchar_braille(arr, (unsigned char) (x / BRAILLE_WIDTH), (unsigned char) (y / BRAILLE_HEIGHT)), braille_bit_index_2d((unsigned char) (x % BRAILLE_WIDTH), (unsigned char) (y % BRAILLE_HEIGHT))); }
+BRAILLE_DEF wchar_t wchar_braille_2dda_get_wchar_braille(wchar_braille_2dda_t arr, unsigned x, unsigned y) { return arr.items[x + y * arr.width]; }
+BRAILLE_DEF wchar_t* wchar_braille_2dda_get_wchar_braille_ptr(wchar_braille_2dda_t arr, unsigned x, unsigned y) { return &arr.items[x + y * arr.width]; }
+BRAILLE_DEF void wchar_braille_2dda_set_wchar_braille(wchar_braille_2dda_t arr, unsigned x, unsigned y, wchar_t value) { arr.items[x + y * arr.width] = value; }
 
 #endif // BRAILLE_IMPLEMENTATION
 
