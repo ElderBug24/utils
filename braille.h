@@ -107,11 +107,19 @@ BRAILLE_DEF void wchar_braille_2da_move_bit_rect_into(wchar_braille_2da_t arr, w
 #define BRAILLE_MALLOC malloc
 #endif
 
+#ifndef BRAILLE_CALLOC
+#define BRAILLE_CALLOC calloc
+#endif
+
+#ifndef BRAILLE_REALLOC
+#define BRAILLE_REALLOC realloc
+#endif
+
 #ifndef BRAILLE_FREE
 #define BRAILLE_FREE free
 #endif
 
-#include <stdlib.h> // malloc & free
+#include <stdlib.h> // malloc, calloc, realloc & free
 #include <string.h> // memcpy & memmove
 
 
