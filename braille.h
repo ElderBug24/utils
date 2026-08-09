@@ -70,6 +70,7 @@ BRAILLE_DEF bool wchar_is_braille(wchar_t wchar);
 BRAILLE_DEF unsigned char braille_bit_index_2d(unsigned char x, unsigned char y);
 
 BRAILLE_DEF braille_2da_t braille_2da_new(unsigned width, unsigned height);
+BRAILLE_DEF braille_2da_t braille_2da_new_empty(unsigned width, unsigned height);
 BRAILLE_DEF void braille_2da_free(braille_2da_t arr);
 BRAILLE_DEF bool braille_2da_get_bit(braille_2da_t arr, unsigned x, unsigned y);
 BRAILLE_DEF void braille_2da_assign_bit(braille_2da_t arr, unsigned x, unsigned y, bool value);
@@ -88,6 +89,7 @@ BRAILLE_DEF double braille_2da_neighborhood_count_gaussian(braille_2da_t arr, un
 BRAILLE_DEF float braille_2da_neighborhood_count_gaussianf(braille_2da_t arr, unsigned x, unsigned y, unsigned rx, unsigned ry, bool value, bool outbound_value);
 
 BRAILLE_DEF wchar_braille_2da_t wchar_braille_2da_new(unsigned width, unsigned height);
+BRAILLE_DEF wchar_braille_2da_t wchar_braille_2da_new_empty(unsigned width, unsigned height);
 BRAILLE_DEF void wchar_braille_2da_free(wchar_braille_2da_t arr);
 BRAILLE_DEF bool wchar_braille_2da_get_bit(wchar_braille_2da_t arr, unsigned x, unsigned y);
 BRAILLE_DEF void wchar_braille_2da_assign_bit(wchar_braille_2da_t arr, unsigned x, unsigned y, bool value);
@@ -182,6 +184,7 @@ BRAILLE_DEF bool wchar_is_braille(wchar_t wchar) { return ((wint_t) wchar >= (wi
 BRAILLE_DEF unsigned char braille_bit_index_2d(unsigned char x, unsigned char y) { return BRAILLE_BITS_MAP_NATURAL[(unsigned char) (x + y * BRAILLE_WIDTH)]; }
 
 BRAILLE_DEF braille_2da_t braille_2da_new(unsigned width, unsigned height) { return (braille_2da_t) { .items = BRAILLE_MALLOC(width * height * sizeof(braille_t)), .width = width, .height = height }; }
+BRAILLE_DEF braille_2da_t braille_2da_new_empty(unsigned width, unsigned height) { return (braille_2da_t) { .items = BRAILLE_CALLOC(width * height, sizeof(braille_t)), .width = width, .height = height }; }
 BRAILLE_DEF void braille_2da_free(braille_2da_t arr) { BRAILLE_FREE(arr.items); }
 BRAILLE_DEF bool braille_2da_get_bit(braille_2da_t arr, unsigned x, unsigned y) { return braille_get_bit(braille_2da_get_braille(arr, x / BRAILLE_WIDTH, y / BRAILLE_HEIGHT), braille_bit_index_2d((unsigned char) (x % BRAILLE_WIDTH), (unsigned char) (y % BRAILLE_HEIGHT))); }
 BRAILLE_DEF void braille_2da_assign_bit(braille_2da_t arr, unsigned x, unsigned y, bool value) { *braille_2da_get_braille_ptr(arr, x / BRAILLE_WIDTH, y / BRAILLE_HEIGHT) = braille_assign_bit(braille_2da_get_braille(arr, x / BRAILLE_WIDTH, y / BRAILLE_HEIGHT), braille_bit_index_2d((unsigned char) (x % BRAILLE_WIDTH), (unsigned char) (y % BRAILLE_HEIGHT)), value); }
@@ -200,6 +203,7 @@ BRAILLE_DEF double braille_2da_neighborhood_count_gaussian(braille_2da_t arr, un
 BRAILLE_DEF float braille_2da_neighborhood_count_gaussianf(braille_2da_t arr, unsigned x, unsigned y, unsigned rx, unsigned ry, bool value, bool outbound_value) { float total = 0.0f; unsigned width = arr.width * BRAILLE_WIDTH; unsigned height = arr.height * BRAILLE_HEIGHT; if (rx == 0 || ry == 0) return 0.0f; float normalization = 1.0f / ((float) BRAILLE_PI * (float) rx * (float) ry); for (unsigned dx = 0; dx <= rx; ++dx) { for (unsigned dy = 0; dy <= ry; ++dy) { float weight = normalization * expf(-((float) (dx * dx) / (float) (rx * rx)) -((float) (dy * dy) / (float) (ry * ry))); if (dx == 0) { if (dy == 0) { total += (braille_2da_get_bit(arr, x, y) == value) * weight; continue; } if (dy > y) total += (outbound_value == value) * weight; else total += (braille_2da_get_bit(arr, x, y - dy) == value) * weight; if (y + dy >= height) total += (outbound_value == value) * weight; else total += (braille_2da_get_bit(arr, x, y + dy) == value) * weight; continue; } if (dy == 0) { if (dx > x) total += (outbound_value == value) * weight; else total += (braille_2da_get_bit(arr, x - dx, y) == value) * weight; if (x + dx >= width) total += (outbound_value == value) * weight; else total += (braille_2da_get_bit(arr, x + dx, y) == value) * weight; continue; } if (dx > x || dy > y) total += (outbound_value == value) * weight; else total += (braille_2da_get_bit(arr, x - dx, y - dy) == value) * weight; if (dx > x || y + dy >= height) total += (outbound_value == value) * weight; else total += (braille_2da_get_bit(arr, x - dx, y + dy) == value) * weight; if (x + dx >= width || dy > y) total += (outbound_value == value) * weight; else total += (braille_2da_get_bit(arr, x + dx, y - dy) == value) * weight; if (x + dx >= width || y + dy >= height) total += (outbound_value == value) * weight; else total += (braille_2da_get_bit(arr, x + dx, y + dy) == value) * weight; } } return total; }
 
 BRAILLE_DEF wchar_braille_2da_t wchar_braille_2da_new(unsigned width, unsigned height) { return (wchar_braille_2da_t) { .items = BRAILLE_MALLOC(width * height * sizeof(wchar_t)), .width = width, .height = height }; }
+BRAILLE_DEF wchar_braille_2da_t wchar_braille_2da_new_empty(unsigned width, unsigned height) { wchar_braille_2da_t arr = (wchar_braille_2da_t) { .items = BRAILLE_MALLOC(width * height * sizeof(wchar_t)), .width = width, .height = height }; for (unsigned i = 0; i < width * height; ++i) arr.items[i] = WCHAR_BRAILLE_EMPTY; return arr; }
 BRAILLE_DEF void wchar_braille_2da_free(wchar_braille_2da_t arr) { BRAILLE_FREE(arr.items); }
 BRAILLE_DEF bool wchar_braille_2da_get_bit(wchar_braille_2da_t arr, unsigned x, unsigned y) { return wchar_braille_get_bit(wchar_braille_2da_get_wchar_braille(arr, x / BRAILLE_WIDTH, y / BRAILLE_HEIGHT), braille_bit_index_2d((unsigned char) (x % BRAILLE_WIDTH), (unsigned char) (y % BRAILLE_HEIGHT))); }
 BRAILLE_DEF void wchar_braille_2da_assign_bit(wchar_braille_2da_t arr, unsigned x, unsigned y, bool value) { *wchar_braille_2da_get_wchar_braille_ptr(arr, x / BRAILLE_WIDTH, y / BRAILLE_HEIGHT) = wchar_braille_assign_bit(wchar_braille_2da_get_wchar_braille(arr, x / BRAILLE_WIDTH, y / BRAILLE_HEIGHT), braille_bit_index_2d((unsigned char) (x % BRAILLE_WIDTH), (unsigned char) (y % BRAILLE_HEIGHT)), value); }
